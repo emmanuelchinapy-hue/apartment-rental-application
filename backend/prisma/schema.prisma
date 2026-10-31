@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ADDITIONAL_INFORMATION_REQUESTED
+  APPROVED
+  REJECTED
+}
+
+enum PreferredPaymentMethod {
+  BANK_TRANSFER
+  PAYPAL
+  CASH_APP
+  CRYPTO_TRANSFER
+  WESTERN_UNION
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+}
+
+model Application {
+  id                              String                    @id @default(cuid())
+  refNumber                       String                    @unique
+  fullName                        String
+  email                           String
+  contactNumber                   String
+  countryOfResidence              String
+  currentHomeAddress              String
+  city                            String
+  state                           String
+  postalCode                     String
+  preferredContactMethod          String
+  newApartmentAddress            String
+  newApartmentCity               String
+  newApartmentState              String
+  newApartmentPostalCode         String
+  monthlyRentalBudget            Float
+  preferredMoveInDate            DateTime
+  intendedDurationOfStay         String
+  numberOfOccupants             Int
+  employmentStatus               String
+  employerName                   String?
+  jobTitle                       String?
+  lengthOfEmployment            String?
+  monthlyIncome                  Float?
+  alternativeIncome              String?
+  hasPriorRentalHistory          Boolean
+  previousRentalAddress          String?
+  previousLandlordName           String?
+  previousLandlordContact        String?
+  previousTenancyLength          String?
+  reasonForLeaving               String?
+  intendedOccupants              String?
+  pets                           String?
+  additionalInformation           String?
+  specialAccommodation            String?
+  consentToProcess                Boolean
+  privacyNoticeAccepted           Boolean
+  applicationStatus              ApplicationStatus @default(SUBMITTED)
+  preferredPaymentMethod          PreferredPaymentMethod?
+  paymentPreferenceSelectedAt     DateTime?
+  paymentPreferenceLastUpdatedAt   DateTime?
+  submissionDate                  DateTime @default(now())
+  lastUpdated                    DateTime @updatedAt
+  createdAt                      DateTime @default(now())
+  notes                          String?
+  incomeVerificationDocumentName String?
+  incomeVerificationDocumentPath String?
+  incomeVerificationDocumentMime String?
+  incomeVerificationDocumentSize Int?
+  documents                      Document[]
+  audits                         AuditLog[]
+
+  @@index([email])
+  @@index([applicationStatus])
+  @@index([preferredPaymentMethod])
+  @@index([refNumber])
+}
+
+model Document {
+  id           String    @id @default(cuid())
+  applicationId String
+  originalName String
+  storedName   String
+  mimeType     String
+  fileSize     Int
+  filePath     String
+  uploadedAt   DateTime  @default(now())
+  application  Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id           String    @id @default(cuid())
+  applicationId String
+  action       String
+  details      String?
+  actorName    String?
+  createdAt    DateTime  @default(now())
+  application  Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
